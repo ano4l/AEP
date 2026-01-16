@@ -81,6 +81,9 @@ export const db = isBuildTime ? {
     update: async () => null,
     delete: async () => null,
   },
+  // Legacy helper methods for build time
+  getUser: async () => null,
+  getUserByEmail: async () => null,
 } : {
   // ==========================================
   // USER OPERATIONS
