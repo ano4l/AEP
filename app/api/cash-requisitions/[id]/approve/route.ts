@@ -12,6 +12,14 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Skip database operations during build time
+    const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build' || 
+      (process.env.NODE_ENV === 'production' && !process.env.SUPABASE_URL)
+    
+    if (isBuildTime) {
+      return NextResponse.json({ message: "Build mode - operation skipped" })
+    }
+
     const { id } = await params
     const user = await requireUserWithRoles(["ADMIN", "HR"])
     const body = await request.json()

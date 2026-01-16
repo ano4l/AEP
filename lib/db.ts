@@ -4,15 +4,15 @@ const supabaseUrl = process.env.SUPABASE_URL
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables')
-}
+// Skip validation during build time to allow static generation
+const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build' || 
+  (process.env.NODE_ENV === 'production' && !process.env.SUPABASE_URL)
 
 // Client for user operations (uses RLS)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = isBuildTime ? null : createClient(supabaseUrl!, supabaseAnonKey!)
 
 // Admin client for system operations (bypasses RLS)
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey || supabaseAnonKey, {
+export const supabaseAdmin = isBuildTime ? null : createClient(supabaseUrl!, supabaseServiceKey || supabaseAnonKey!, {
   auth: {
     autoRefreshToken: false,
     persistSession: false
@@ -24,12 +24,70 @@ export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey || sup
 // Using Supabase REST API
 // ============================================
 
-export const db = {
+export const db = isBuildTime ? {
+  // Mock operations for build time
+  user: {
+    findUnique: async () => null,
+    findMany: async () => [],
+    create: async () => null,
+    update: async () => null,
+    delete: async () => null,
+    count: async () => 0,
+  },
+  task: {
+    findUnique: async () => null,
+    findMany: async () => [],
+    create: async () => null,
+    update: async () => null,
+    delete: async () => null,
+    count: async () => 0,
+  },
+  leaveRequest: {
+    findUnique: async () => null,
+    findMany: async () => [],
+    create: async () => null,
+    update: async () => null,
+    delete: async () => null,
+    count: async () => 0,
+  },
+  cashRequisition: {
+    findUnique: async () => null,
+    findMany: async () => [],
+    create: async () => null,
+    update: async () => null,
+    delete: async () => null,
+    count: async () => 0,
+  },
+  leaveType: {
+    findUnique: async () => null,
+    findMany: async () => [],
+    create: async () => null,
+    update: async () => null,
+  },
+  notification: {
+    findUnique: async () => null,
+    findMany: async () => [],
+    create: async () => null,
+    update: async () => null,
+    delete: async () => null,
+  },
+  auditLog: {
+    create: async () => null,
+  },
+  fileAttachment: {
+    findUnique: async () => null,
+    findMany: async () => [],
+    create: async () => null,
+    update: async () => null,
+    delete: async () => null,
+  },
+} : {
   // ==========================================
   // USER OPERATIONS
   // ==========================================
   user: {
     async findUnique(args: { where: { id?: string; email?: string }; select?: any }) {
+      if (!supabase) throw new Error('Database not available during build')
       const { where, select } = args
       let query = supabase.from('User').select(select ? Object.keys(select).join(',') : '*')
       
@@ -42,6 +100,7 @@ export const db = {
     },
 
     async findMany(args?: { where?: any; select?: any; orderBy?: any; take?: number }) {
+      if (!supabase) throw new Error('Database not available during build')
       let query = supabase.from('User').select(args?.select ? Object.keys(args.select).join(',') : '*')
       
       if (args?.where?.role) query = query.eq('role', args.where.role)
@@ -803,6 +862,6 @@ export const db = {
   async createNotification(data: any) {
     return this.notification.create({ data })
   }
-}
+} as const
 
 export default db
