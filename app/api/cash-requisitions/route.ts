@@ -18,6 +18,10 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url)
     const status = searchParams.get("status")
+    
+    // Pagination parameters
+    const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 100)
+    const offset = parseInt(searchParams.get("offset") || "0")
 
     const where: any = {}
     if (status) where.status = status
@@ -36,9 +40,21 @@ export async function GET(request: Request) {
       where,
       include: { preparedBy: true, authorisedBy: true },
       orderBy: { createdAt: "desc" },
+      take: limit,
+      skip: offset,
     }) as any
+    
+    const total = await db.cashRequisition.count({ where })
 
-    return NextResponse.json(requisitions)
+    return NextResponse.json({
+      data: requisitions,
+      pagination: {
+        limit,
+        offset,
+        total,
+        hasMore: offset + limit < total
+      }
+    })
   } catch (error: any) {
     console.error("Error fetching requisitions:", error)
     // Return empty array if database is unavailable

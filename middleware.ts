@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
+import { logRequest } from "./lib/request-logger"
 
 const COOKIE_NAME = "acetech_session"
 const TESTING_MODE = process.env.NEXT_PUBLIC_TESTING_MODE === 'true'
@@ -31,13 +32,15 @@ function parseSession(cookie: string | undefined): SessionPayload | null {
 }
 
 export function middleware(request: NextRequest) {
+  const startTime = Date.now()
+  const { pathname } = request.nextUrl
+  const method = request.method
+  
   // Skip ALL middleware in testing mode - allow everything
   if (TESTING_MODE) {
     console.log('🧪 Testing mode: bypassing all middleware checks');
     return NextResponse.next()
   }
-
-  const { pathname } = request.nextUrl
 
   // Allow auth routes
   if (pathname.startsWith("/api/auth")) {
@@ -71,6 +74,18 @@ export function middleware(request: NextRequest) {
   const session = parseSession(cookie)
   
   if (!session) {
+    // Log unauthorized access attempt
+    logRequest({
+      timestamp: new Date().toISOString(),
+      method,
+      path: pathname,
+      status: 401,
+      duration: Date.now() - startTime,
+      userAgent: request.headers.get('user-agent') || undefined,
+      ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+      error: 'Unauthorized - No session',
+    })
+    
     const url = request.nextUrl.clone()
     url.pathname = "/login"
     if (pathname !== "/login") {
@@ -79,11 +94,24 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  const { role } = session
+  const { role, userId } = session
 
   // Role-based route protection
   // Admin dashboard - only ADMIN and HR
   if (pathname.startsWith("/dashboard") && role !== "ADMIN" && role !== "HR") {
+    logRequest({
+      timestamp: new Date().toISOString(),
+      method,
+      path: pathname,
+      userId,
+      userRole: role,
+      status: 403,
+      duration: Date.now() - startTime,
+      userAgent: request.headers.get('user-agent') || undefined,
+      ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+      error: 'Forbidden - Insufficient permissions',
+    })
+    
     const url = request.nextUrl.clone()
     url.pathname = "/employee"
     return NextResponse.redirect(url)
@@ -91,6 +119,19 @@ export function middleware(request: NextRequest) {
 
   // Employee dashboard - only EMPLOYEE
   if (pathname.startsWith("/employee") && role !== "EMPLOYEE") {
+    logRequest({
+      timestamp: new Date().toISOString(),
+      method,
+      path: pathname,
+      userId,
+      userRole: role,
+      status: 403,
+      duration: Date.now() - startTime,
+      userAgent: request.headers.get('user-agent') || undefined,
+      ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+      error: 'Forbidden - Wrong role',
+    })
+    
     const url = request.nextUrl.clone()
     url.pathname = "/dashboard"
     return NextResponse.redirect(url)
@@ -102,6 +143,19 @@ export function middleware(request: NextRequest) {
     url.pathname = role === "EMPLOYEE" ? "/employee" : "/dashboard"
     return NextResponse.redirect(url)
   }
+
+  // Log successful request
+  logRequest({
+    timestamp: new Date().toISOString(),
+    method,
+    path: pathname,
+    userId,
+    userRole: role,
+    status: 200,
+    duration: Date.now() - startTime,
+    userAgent: request.headers.get('user-agent') || undefined,
+    ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+  })
 
   return NextResponse.next()
 }

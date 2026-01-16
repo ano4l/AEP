@@ -26,6 +26,10 @@ export async function GET(request: Request) {
     const status = searchParams.get("status")
     const assigneeId = searchParams.get("assigneeId")
     const priority = searchParams.get("priority")
+    
+    // Pagination parameters
+    const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 100)
+    const offset = parseInt(searchParams.get("offset") || "0")
 
     const where: any = {}
 
@@ -47,9 +51,21 @@ export async function GET(request: Request) {
     const tasks = await db.task.findMany({
       where,
       orderBy: { createdAt: "desc" },
+      take: limit,
+      skip: offset,
     }) as any
+    
+    const total = await db.task.count({ where })
 
-    return NextResponse.json(tasks)
+    return NextResponse.json({
+      data: tasks,
+      pagination: {
+        limit,
+        offset,
+        total,
+        hasMore: offset + limit < total
+      }
+    })
   } catch (error: any) {
     console.error("Error fetching tasks:", error)
     // Return empty array if database is unavailable

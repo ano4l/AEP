@@ -122,20 +122,33 @@ export const db = {
       return data
     },
 
-    async findMany(args?: { where?: any; include?: any; orderBy?: any; take?: number }) {
+    async findMany(args?: { where?: any; include?: any; orderBy?: any; take?: number; skip?: number }) {
       let selectFields = '*'
       if (args?.include?.preparedBy) selectFields += ', preparedBy:User!preparedById(*)'
+      if (args?.include?.authorisedBy) selectFields += ', authorisedBy:User!authorisedById(*)'
       
       // Use admin client to bypass RLS for cash requisition retrieval
       let query = supabaseAdmin.from('CashRequisition').select(selectFields)
       
-      if (args?.where?.status) query = query.eq('status', args.where.status)
+      if (args?.where?.status) {
+        if (args.where.status.in) {
+          query = query.in('status', args.where.status.in)
+        } else {
+          query = query.eq('status', args.where.status)
+        }
+      }
       if (args?.where?.preparedById) query = query.eq('preparedById', args.where.preparedById)
       if (args?.orderBy) {
         const key = Object.keys(args.orderBy)[0]
         query = query.order(key, { ascending: args.orderBy[key] === 'asc' })
       }
-      if (args?.take) query = query.limit(args.take)
+      
+      // Pagination support
+      if (args?.skip !== undefined && args?.take !== undefined) {
+        query = query.range(args.skip, args.skip + args.take - 1)
+      } else if (args?.take) {
+        query = query.limit(args.take)
+      }
       
       const { data, error } = await query
       if (error) throw error
@@ -204,7 +217,7 @@ export const db = {
       return data
     },
 
-    async findMany(args?: { where?: any; include?: any; orderBy?: any; take?: number }) {
+    async findMany(args?: { where?: any; include?: any; orderBy?: any; take?: number; skip?: number }) {
       let selectFields = '*'
       if (args?.include?.assignee) selectFields += ', assignee:User!assigneeId(*)'
       if (args?.include?.creator) selectFields += ', creator:User!createdById(*)'
@@ -224,7 +237,13 @@ export const db = {
         const key = Object.keys(args.orderBy)[0]
         query = query.order(key, { ascending: args.orderBy[key] === 'asc' })
       }
-      if (args?.take) query = query.limit(args.take)
+      
+      // Pagination support
+      if (args?.skip !== undefined && args?.take !== undefined) {
+        query = query.range(args.skip, args.skip + args.take - 1)
+      } else if (args?.take) {
+        query = query.limit(args.take)
+      }
       
       const { data, error } = await query
       if (error) throw error
@@ -238,14 +257,16 @@ export const db = {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       }
-      const { data, error } = await supabase.from('Task').insert([taskData]).select().single()
+      // Use admin client to bypass RLS for task creation
+      const { data, error } = await supabaseAdmin.from('Task').insert([taskData]).select().single()
       if (error) throw error
       return data
     },
 
     async update(args: { where: { id: string }; data: any }) {
       const updateData = { ...args.data, updatedAt: new Date().toISOString() }
-      const { data, error } = await supabase
+      // Use admin client to bypass RLS for task updates
+      const { data, error } = await supabaseAdmin
         .from('Task')
         .update(updateData)
         .eq('id', args.where.id)
@@ -256,13 +277,15 @@ export const db = {
     },
 
     async delete(args: { where: { id: string } }) {
-      const { error } = await supabase.from('Task').delete().eq('id', args.where.id)
+      // Use admin client to bypass RLS for task deletion
+      const { error } = await supabaseAdmin.from('Task').delete().eq('id', args.where.id)
       if (error) throw error
       return { id: args.where.id }
     },
 
     async count(args?: { where?: any }) {
-      let query = supabase.from('Task').select('id', { count: 'exact', head: true })
+      // Use admin client to bypass RLS for task counting
+      let query = supabaseAdmin.from('Task').select('id', { count: 'exact', head: true })
       if (args?.where?.status) {
         if (args.where.status.in) {
           query = query.in('status', args.where.status.in)
@@ -437,7 +460,7 @@ export const db = {
       return data
     },
 
-    async findMany(args?: { where?: any; include?: any; orderBy?: any; take?: number }) {
+    async findMany(args?: { where?: any; include?: any; orderBy?: any; take?: number; skip?: number }) {
       let selectFields = '*'
       if (args?.include?.user) selectFields += ', user:User!requesterId(*)'
       if (args?.include?.leaveType) selectFields += ', leaveType:LeaveType(*)'
@@ -458,7 +481,13 @@ export const db = {
         const key = Object.keys(args.orderBy)[0]
         query = query.order(key, { ascending: args.orderBy[key] === 'asc' })
       }
-      if (args?.take) query = query.limit(args.take)
+      
+      // Pagination support
+      if (args?.skip !== undefined && args?.take !== undefined) {
+        query = query.range(args.skip, args.skip + args.take - 1)
+      } else if (args?.take) {
+        query = query.limit(args.take)
+      }
       
       const { data, error } = await query
       if (error) throw error
@@ -505,22 +534,52 @@ export const db = {
   // LEAVE TYPE OPERATIONS
   // ==========================================
   leaveType: {
-    async findMany(args?: { orderBy?: any }) {
-      let query = supabase.from('LeaveType').select('*')
+    async findMany(args?: { where?: any; orderBy?: any }) {
+      let query = supabaseAdmin.from('LeaveType').select('*')
+      
+      if (args?.where?.isActive !== undefined) {
+        query = query.eq('isActive', args.where.isActive)
+      }
+      
       if (args?.orderBy) {
         const key = Object.keys(args.orderBy)[0]
         query = query.order(key, { ascending: args.orderBy[key] === 'asc' })
       }
+      
       const { data, error } = await query
       if (error) throw error
       return data || []
     },
 
     async findUnique(args: { where: { id: string } }) {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from('LeaveType')
         .select('*')
         .eq('id', args.where.id)
+        .single()
+      if (error) throw error
+      return data
+    },
+    
+    async create(args: { data: any }) {
+      const leaveTypeData = {
+        id: crypto.randomUUID(),
+        ...args.data,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+      const { data, error } = await supabaseAdmin.from('LeaveType').insert([leaveTypeData]).select().single()
+      if (error) throw error
+      return data
+    },
+    
+    async update(args: { where: { id: string }; data: any }) {
+      const updateData = { ...args.data, updatedAt: new Date().toISOString() }
+      const { data, error } = await supabaseAdmin
+        .from('LeaveType')
+        .update(updateData)
+        .eq('id', args.where.id)
+        .select()
         .single()
       if (error) throw error
       return data
