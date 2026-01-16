@@ -1,8 +1,23 @@
 import { NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/db'
+// Use build-safe import during build time
+const supabaseAdmin = process.env.NEXT_PHASE === 'phase-production-build' ? 
+  require("@/lib/db-build-safe").supabaseAdmin : 
+  require("@/lib/db").supabaseAdmin
 
 export async function GET() {
   try {
+    // Skip database check during build time
+    if (process.env.NEXT_PHASE === 'phase-production-build') {
+      return NextResponse.json({
+        status: 'healthy',
+        database: 'skipped-during-build',
+        responseTime: '0ms',
+        timestamp: new Date().toISOString(),
+        version: process.env.APP_VERSION || '1.0.0',
+        environment: 'build',
+      })
+    }
+
     const startTime = Date.now()
     
     // Check database connectivity
