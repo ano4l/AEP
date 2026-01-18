@@ -121,6 +121,7 @@ export const db = isBuildTime ? {
     },
 
     async create(args: { data: any }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       const userData = {
         id: crypto.randomUUID(),
         ...args.data,
@@ -134,6 +135,7 @@ export const db = isBuildTime ? {
     },
 
     async update(args: { where: { id: string }; data: any }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       const updateData = { ...args.data, updatedAt: new Date().toISOString() }
       // Use admin client to bypass RLS for user updates (e.g., profile changes)
       const { data, error } = await supabaseAdmin
@@ -147,6 +149,7 @@ export const db = isBuildTime ? {
     },
 
     async delete(args: { where: { id: string } }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       // Use admin client to bypass RLS for user deletion
       const { error } = await supabaseAdmin.from('User').delete().eq('id', args.where.id)
       if (error) throw error
@@ -154,6 +157,7 @@ export const db = isBuildTime ? {
     },
 
     async count(args?: { where?: any }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       // Use admin client to bypass RLS for user counting
       let query = supabaseAdmin.from('User').select('id', { count: 'exact', head: true })
       if (args?.where?.status) query = query.eq('status', args.where.status)
@@ -169,6 +173,7 @@ export const db = isBuildTime ? {
   // ==========================================
   cashRequisition: {
     async findUnique(args: { where: { id: string }; include?: any }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       let selectFields = '*'
       if (args.include?.preparedBy) selectFields += ', preparedBy:User!preparedById(*)'
       if (args.include?.authorisedBy) selectFields += ', authorisedBy:User!authorisedById(*)'
@@ -185,6 +190,7 @@ export const db = isBuildTime ? {
     },
 
     async findMany(args?: { where?: any; include?: any; orderBy?: any; take?: number; skip?: number }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       let selectFields = '*'
       if (args?.include?.preparedBy) selectFields += ', preparedBy:User!preparedById(*)'
       if (args?.include?.authorisedBy) selectFields += ', authorisedBy:User!authorisedById(*)'
@@ -218,6 +224,7 @@ export const db = isBuildTime ? {
     },
 
     async create(args: { data: any }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       const reqData = {
         id: crypto.randomUUID(),
         ...args.data,
@@ -231,6 +238,7 @@ export const db = isBuildTime ? {
     },
 
     async update(args: { where: { id: string }; data: any }) {
+      if (!supabase) throw new Error('Database not available during build')
       const updateData = { ...args.data, updatedAt: new Date().toISOString() }
       const { data, error } = await supabase
         .from('CashRequisition')
@@ -243,6 +251,7 @@ export const db = isBuildTime ? {
     },
 
     async count(args?: { where?: any }) {
+      if (!supabase) throw new Error('Database not available during build')
       let query = supabase.from('CashRequisition').select('id', { count: 'exact', head: true })
       if (args?.where?.status) {
         if (args.where.status.in) {
@@ -263,6 +272,7 @@ export const db = isBuildTime ? {
   // ==========================================
   task: {
     async findUnique(args: { where: { id: string }; include?: any }) {
+      if (!supabase) throw new Error('Database not available during build')
       let selectFields = '*'
       if (args.include?.assignee) selectFields += ', assignee:User!assigneeId(*)'
       if (args.include?.creator) selectFields += ', creator:User!createdById(*)'
@@ -280,6 +290,7 @@ export const db = isBuildTime ? {
     },
 
     async findMany(args?: { where?: any; include?: any; orderBy?: any; take?: number; skip?: number }) {
+      if (!supabase) throw new Error('Database not available during build')
       let selectFields = '*'
       if (args?.include?.assignee) selectFields += ', assignee:User!assigneeId(*)'
       if (args?.include?.creator) selectFields += ', creator:User!createdById(*)'
@@ -313,6 +324,7 @@ export const db = isBuildTime ? {
     },
 
     async create(args: { data: any }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       const taskData = {
         id: crypto.randomUUID(),
         ...args.data,
@@ -326,6 +338,7 @@ export const db = isBuildTime ? {
     },
 
     async update(args: { where: { id: string }; data: any }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       const updateData = { ...args.data, updatedAt: new Date().toISOString() }
       // Use admin client to bypass RLS for task updates
       const { data, error } = await supabaseAdmin
@@ -339,6 +352,7 @@ export const db = isBuildTime ? {
     },
 
     async delete(args: { where: { id: string } }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       // Use admin client to bypass RLS for task deletion
       const { error } = await supabaseAdmin.from('Task').delete().eq('id', args.where.id)
       if (error) throw error
@@ -346,6 +360,7 @@ export const db = isBuildTime ? {
     },
 
     async count(args?: { where?: any }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       // Use admin client to bypass RLS for task counting
       let query = supabaseAdmin.from('Task').select('id', { count: 'exact', head: true })
       if (args?.where?.status) {
@@ -367,6 +382,7 @@ export const db = isBuildTime ? {
   // ==========================================
   taskComment: {
     async findMany(args?: { where?: any; include?: any; orderBy?: any }) {
+      if (!supabase) throw new Error('Database not available during build')
       let selectFields = '*'
       if (args?.include?.user) selectFields += ', user:User!userId(*)'
       
@@ -384,6 +400,7 @@ export const db = isBuildTime ? {
     },
 
     async create(args: { data: any }) {
+      if (!supabase) throw new Error('Database not available during build')
       const commentData = {
         id: crypto.randomUUID(),
         ...args.data,
@@ -400,6 +417,7 @@ export const db = isBuildTime ? {
   // ==========================================
   taskAttachment: {
     async create(args: { data: any }) {
+      if (!supabase) throw new Error('Database not available during build')
       const attachmentData = {
         id: crypto.randomUUID(),
         ...args.data,
@@ -411,6 +429,7 @@ export const db = isBuildTime ? {
     },
 
     async findMany(args?: { where?: any }) {
+      if (!supabase) throw new Error('Database not available during build')
       let query = supabase.from('TaskAttachment').select('*')
       if (args?.where?.taskId) query = query.eq('taskId', args.where.taskId)
       const { data, error } = await query
@@ -424,6 +443,7 @@ export const db = isBuildTime ? {
   // ==========================================
   timeEntry: {
     async create(args: { data: any }) {
+      if (!supabase) throw new Error('Database not available during build')
       const entryData = {
         id: crypto.randomUUID(),
         ...args.data,
@@ -435,6 +455,7 @@ export const db = isBuildTime ? {
     },
 
     async findMany(args?: { where?: any; include?: any }) {
+      if (!supabase) throw new Error('Database not available during build')
       let selectFields = '*'
       if (args?.include?.user) selectFields += ', user:User!userId(*)'
       
@@ -451,6 +472,7 @@ export const db = isBuildTime ? {
   // ==========================================
   taskDependency: {
     async create(args: { data: any }) {
+      if (!supabase) throw new Error('Database not available during build')
       const depData = {
         id: crypto.randomUUID(),
         ...args.data
@@ -461,6 +483,7 @@ export const db = isBuildTime ? {
     },
 
     async findUnique(args: { where: { taskId_dependsOnTaskId?: { taskId: string; dependsOnTaskId: string }; id?: string } }) {
+      if (!supabase) throw new Error('Database not available during build')
       let query = supabase.from('TaskDependency').select('*')
       
       if (args.where.taskId_dependsOnTaskId) {
@@ -477,6 +500,7 @@ export const db = isBuildTime ? {
     },
 
     async findMany(args?: { where?: any }) {
+      if (!supabase) throw new Error('Database not available during build')
       let query = supabase.from('TaskDependency').select('*')
       if (args?.where?.taskId) query = query.eq('taskId', args.where.taskId)
       if (args?.where?.dependsOnId) query = query.eq('dependsOnId', args.where.dependsOnId)
@@ -486,6 +510,7 @@ export const db = isBuildTime ? {
     },
 
     async delete(args: { where: { taskId_dependsOnTaskId?: { taskId: string; dependsOnTaskId: string }; id?: string } }) {
+      if (!supabase) throw new Error('Database not available during build')
       let query = supabase.from('TaskDependency').delete()
       
       if (args.where.taskId_dependsOnTaskId) {
@@ -507,6 +532,7 @@ export const db = isBuildTime ? {
   // ==========================================
   leaveRequest: {
     async findUnique(args: { where: { id: string }; include?: any }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       let selectFields = '*'
       if (args.include?.user) selectFields += ', user:User!requesterId(*)'
       if (args.include?.leaveType) selectFields += ', leaveType:LeaveType(*)'
@@ -523,6 +549,7 @@ export const db = isBuildTime ? {
     },
 
     async findMany(args?: { where?: any; include?: any; orderBy?: any; take?: number; skip?: number }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       let selectFields = '*'
       if (args?.include?.user) selectFields += ', user:User!requesterId(*)'
       if (args?.include?.leaveType) selectFields += ', leaveType:LeaveType(*)'
@@ -557,6 +584,7 @@ export const db = isBuildTime ? {
     },
 
     async create(args: { data: any }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       const leaveData = {
         id: crypto.randomUUID(),
         ...args.data,
@@ -570,6 +598,7 @@ export const db = isBuildTime ? {
     },
 
     async update(args: { where: { id: string }; data: any }) {
+      if (!supabase) throw new Error('Database not available during build')
       const updateData = { ...args.data, updatedAt: new Date().toISOString() }
       const { data, error } = await supabase
         .from('LeaveRequest')
@@ -582,6 +611,7 @@ export const db = isBuildTime ? {
     },
 
     async count(args?: { where?: any }) {
+      if (!supabase) throw new Error('Database not available during build')
       let query = supabase.from('LeaveRequest').select('id', { count: 'exact', head: true })
       if (args?.where?.status) query = query.eq('status', args.where.status)
       if (args?.where?.requesterId) query = query.eq('requesterId', args.where.requesterId)
@@ -597,6 +627,7 @@ export const db = isBuildTime ? {
   // ==========================================
   leaveType: {
     async findMany(args?: { where?: any; orderBy?: any }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       let query = supabaseAdmin.from('LeaveType').select('*')
       
       if (args?.where?.isActive !== undefined) {
@@ -614,6 +645,7 @@ export const db = isBuildTime ? {
     },
 
     async findUnique(args: { where: { id: string } }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       const { data, error } = await supabaseAdmin
         .from('LeaveType')
         .select('*')
@@ -624,6 +656,7 @@ export const db = isBuildTime ? {
     },
     
     async create(args: { data: any }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       const leaveTypeData = {
         id: crypto.randomUUID(),
         ...args.data,
@@ -636,6 +669,7 @@ export const db = isBuildTime ? {
     },
     
     async update(args: { where: { id: string }; data: any }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       const updateData = { ...args.data, updatedAt: new Date().toISOString() }
       const { data, error } = await supabaseAdmin
         .from('LeaveType')
@@ -653,6 +687,7 @@ export const db = isBuildTime ? {
   // ==========================================
   notification: {
     async findMany(args?: { where?: any; orderBy?: any; take?: number }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       let query = supabaseAdmin.from('Notification').select('*')
       
       if (args?.where?.userId) query = query.eq('userId', args.where.userId)
@@ -669,6 +704,7 @@ export const db = isBuildTime ? {
     },
 
     async findUnique(args: { where: { id: string } }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       const { data, error } = await supabaseAdmin
         .from('Notification')
         .select('*')
@@ -679,6 +715,7 @@ export const db = isBuildTime ? {
     },
 
     async create(args: { data: any }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       const notifData = {
         id: crypto.randomUUID(),
         ...args.data,
@@ -690,6 +727,7 @@ export const db = isBuildTime ? {
     },
 
     async createMany(args: { data: any[] }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       const notifications = args.data.map(n => ({
         id: crypto.randomUUID(),
         ...n,
@@ -701,6 +739,7 @@ export const db = isBuildTime ? {
     },
 
     async update(args: { where: { id: string }; data: any }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       const { data, error } = await supabaseAdmin
         .from('Notification')
         .update(args.data)
@@ -712,6 +751,7 @@ export const db = isBuildTime ? {
     },
 
     async updateMany(args: { where?: any; data: any }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       let query = supabaseAdmin.from('Notification').update(args.data)
       if (args.where?.userId) query = query.eq('userId', args.where.userId)
       if (args.where?.read !== undefined) query = query.eq('read', args.where.read)
@@ -721,6 +761,7 @@ export const db = isBuildTime ? {
     },
 
     async count(args?: { where?: any }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       let query = supabaseAdmin.from('Notification').select('id', { count: 'exact', head: true })
       if (args?.where?.userId) query = query.eq('userId', args.where.userId)
       if (args?.where?.read !== undefined) query = query.eq('read', args.where.read)
@@ -735,6 +776,7 @@ export const db = isBuildTime ? {
   // ==========================================
   auditLog: {
     async create(args: { data: any }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       const logData = {
         id: crypto.randomUUID(),
         ...args.data,
@@ -746,6 +788,7 @@ export const db = isBuildTime ? {
     },
 
     async findMany(args?: { where?: any; orderBy?: any; take?: number }) {
+      if (!supabaseAdmin) throw new Error('Database not available during build')
       let query = supabaseAdmin.from('AuditLog').select('*')
       if (args?.where?.entityType) query = query.eq('entityType', args.where.entityType)
       if (args?.where?.entityId) query = query.eq('entityId', args.where.entityId)
@@ -766,6 +809,7 @@ export const db = isBuildTime ? {
   // ==========================================
   requisitionAttachment: {
     async create(args: { data: any }) {
+      if (!supabase) throw new Error('Database not available during build')
       const attachmentData = {
         id: crypto.randomUUID(),
         ...args.data,
@@ -777,6 +821,7 @@ export const db = isBuildTime ? {
     },
 
     async findMany(args?: { where?: any }) {
+      if (!supabase) throw new Error('Database not available during build')
       let query = supabase.from('RequisitionAttachment').select('*')
       if (args?.where?.requisitionId) query = query.eq('requisitionId', args.where.requisitionId)
       const { data, error } = await query
@@ -789,6 +834,7 @@ export const db = isBuildTime ? {
   // LEGACY HELPER METHODS (for backward compatibility)
   // ==========================================
   async getUser(id: string) {
+    if (!supabaseAdmin) throw new Error('Database not available during build')
     // Use admin client to bypass RLS for session validation
     const { data, error } = await supabaseAdmin
       .from('User')
@@ -801,6 +847,7 @@ export const db = isBuildTime ? {
   },
 
   async getUserByEmail(email: string) {
+    if (!supabaseAdmin) throw new Error('Database not available during build')
     // Use admin client to bypass RLS for authentication
     const { data, error } = await supabaseAdmin
       .from('User')
@@ -817,6 +864,7 @@ export const db = isBuildTime ? {
   },
 
   async updateUser(id: string, updates: any) {
+    if (!supabaseAdmin) throw new Error('Database not available during build')
     // Use admin client to bypass RLS for user updates (e.g., approval/rejection)
     const updateData = { ...updates, updatedAt: new Date().toISOString() }
     const { data, error } = await supabaseAdmin
